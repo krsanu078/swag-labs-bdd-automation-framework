@@ -5,8 +5,6 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
-import java.util.List;
-
 /**
  * LoginPage for SauceDemo - provides business methods to perform login and read errors.
  */
@@ -42,6 +40,13 @@ public class LoginPage extends BasePage {
         type(usernameField, username);
         type(passwordField, password);
         click(loginButton);
+        dismissPasswordChangeAlertIfPresent();
+    }
+
+    public boolean isLoaded() {
+        waitForVisibility(usernameField);
+        waitForVisibility(passwordField);
+        return true;
     }
 
     /**
@@ -50,10 +55,7 @@ public class LoginPage extends BasePage {
      * @return error text or empty string when none
      */
     public String getErrorMessage() {
-        try {
-            return errorContainer.getText();
-        } catch (Exception e) {
-            return "";
-        }
+        waitForVisibility(errorContainer);
+        return getText(errorContainer);
     }
 }

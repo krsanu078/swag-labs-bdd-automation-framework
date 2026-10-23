@@ -3,10 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.seleniumforge</groupId>
-    <artifactId>seleniumforge</artifactId>
+    <artifactId>swag-labs-bdd-automation-framework</artifactId>
     <version>1.0.0</version>
-    <name>seleniumforge</name>
-    <description>Production-ready Selenium Automation Framework</description>
+    <name>Swag Labs BDD Automation Framework</name>
+    <description>BDD UI automation framework for the Swag Labs e-commerce application using Selenium, Cucumber, TestNG, and Page Object Model</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -16,7 +16,7 @@
         <!-- Dependency versions (can be bumped to latest stable as needed) -->
         <selenium.version>4.11.0</selenium.version>
         <testng.version>7.8.0</testng.version>
-        <webdrivermanager.version>5.3.2</webdrivermanager.version>
+        <cucumber.version>7.20.1</cucumber.version>
         <extentreports.version>5.0.9</extentreports.version>
         <log4j.version>2.20.0</log4j.version>
         <poi.version>5.2.3</poi.version>
@@ -36,14 +36,20 @@
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
-            <scope>test</scope>
         </dependency>
 
-        <!-- WebDriverManager -->
+        <!-- Cucumber BDD with TestNG -->
         <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
-            <version>${webdrivermanager.version}</version>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-testng</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Extent Reports -->
@@ -96,6 +102,7 @@
                 <version>3.11.0</version>
                 <configuration>
                     <release>17</release>
+                    <proc>none</proc>
                 </configuration>
             </plugin>
 

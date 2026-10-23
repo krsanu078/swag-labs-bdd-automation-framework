@@ -48,6 +48,10 @@ public final class ConfigReader {
         return properties.getProperty(key);
     }
 
+    public String getProperty(String key, String defaultValue) {
+        return properties.getProperty(key, defaultValue);
+    }
+
     /**
      * Get browser configured in properties.
      *
@@ -77,6 +81,15 @@ public final class ConfigReader {
             return Integer.parseInt(t);
         } catch (NumberFormatException e) {
             return 30;
+        }
+    }
+
+    public int getExplicitWaitTimeout() {
+        String timeout = properties.getProperty("explicitWaitTimeout", "10");
+        try {
+            return Integer.parseInt(timeout);
+        } catch (NumberFormatException e) {
+            return 10;
         }
     }
 

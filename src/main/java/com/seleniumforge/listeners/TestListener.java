@@ -2,9 +2,7 @@ package com.seleniumforge.listeners;
 
 import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.ExtentTest;
-import com.seleniumforge.driver.DriverFactory;
 import com.seleniumforge.reports.ExtentManager;
-import com.seleniumforge.utilities.ScreenshotUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.ITestContext;
@@ -14,6 +12,7 @@ import org.testng.ITestResult;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,25 +53,14 @@ public class TestListener implements ITestListener {
         ExtentTest test = currentTest.get();
         if (test != null) test.pass("Test passed");
         recordDuration(result);
-        // optional capture on success
-        boolean captureOnSuccess = Boolean.parseBoolean(com.seleniumforge.config.ConfigReader.getInstance().getProperty("report.captureOnSuccess", "false"));
-        if (captureOnSuccess) {
-            attachScreenshot(result, "success");
-        }
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
         LOGGER.error("Test failed: {}", result.getMethod().getMethodName(), result.getThrowable());
         ExtentTest test = currentTest.get();
-        attachScreenshot(result, "failure");
         if (test != null) {
-            String base64 = ScreenshotUtil.getBase64Screenshot(DriverFactory.getDriver());
-            if (base64 != null) {
-                test.fail(result.getThrowable(), MediaEntityBuilder.createScreenCaptureFromBase64String(base64).build());
-            } else {
-                test.fail(result.getThrowable());
-            }
+            test.fail(result.getThrowable());
         }
         recordDuration(result);
     }
@@ -81,27 +69,23 @@ public class TestListener implements ITestListener {
     public void onTestSkipped(ITestResult result) {
         LOGGER.warn("Test skipped: {}", result.getMethod().getMethodName());
         ExtentTest test = currentTest.get();
-        attachScreenshot(result, "skipped");
         if (test != null) test.skip(result.getThrowable());
         recordDuration(result);
+    }
+
+    public static void attachScenarioScreenshot(byte[] screenshot, String title) {
+        ExtentTest test = currentTest.get();
+        if (test == null) {
+            LOGGER.warn("No Extent test is active; cannot attach scenario screenshot '{}'", title);
+            return;
+        }
+        String base64 = Base64.getEncoder().encodeToString(screenshot);
+        test.info(title, MediaEntityBuilder.createScreenCaptureFromBase64String(base64).build());
     }
 
     @Override
     public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
         // not used
-    }
-
-    private void attachScreenshot(ITestResult result, String tag) {
-        try {
-            String name = getDisplayName(result) + "_" + tag;
-            String path = ScreenshotUtil.takeScreenshot(DriverFactory.getDriver(), name);
-            ExtentTest test = currentTest.get();
-            if (path != null && test != null) {
-                test.info("Screenshot: " + path, MediaEntityBuilder.createScreenCaptureFromPath(path).build());
-            }
-        } catch (Exception e) {
-            LOGGER.warn("Failed to attach screenshot: {}", e.getMessage());
-        }
     }
 
     private void recordDuration(ITestResult result) {

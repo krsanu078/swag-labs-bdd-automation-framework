@@ -1,4 +1,4 @@
-package com.seleniumforge/pages;
+package com.seleniumforge.pages;
 
 import com.seleniumforge.base.BasePage;
 import org.openqa.selenium.WebElement;
