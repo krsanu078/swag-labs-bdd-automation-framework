@@ -3,7 +3,7 @@
 <suite name="Swag Labs BDD Automation Suite" verbose="1" parallel="false">
     <test name="Cucumber BDD">
         <classes>
-            <class name="com.seleniumforge.bdd.runners.RunCucumberTest"/>
+            <class name="com.swaglabs.bdd.runners.RunCucumberTest"/>
         </classes>
     </test>
 </suite>
