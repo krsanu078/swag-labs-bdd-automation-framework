@@ -1,18 +1,14 @@
 package com.seleniumforge.pages;
 
 import com.seleniumforge.base.BasePage;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 /**
- * LoginPage represents the SauceDemo login screen and actions.
+ * LoginPage for SauceDemo - provides business methods to perform login and read errors.
  */
 public class LoginPage extends BasePage {
-
-    private static final Logger LOGGER = LogManager.getLogger(LoginPage.class);
 
     @FindBy(id = "user-name")
     private WebElement usernameField;
@@ -23,52 +19,43 @@ public class LoginPage extends BasePage {
     @FindBy(id = "login-button")
     private WebElement loginButton;
 
-    @FindBy(css = "h3[data-test='error']")
-    private WebElement errorMessage;
+    @FindBy(css = "[data-test='error']")
+    private WebElement errorContainer;
 
+    /**
+     * Initialize LoginPage and its elements.
+     */
     public LoginPage() {
         super();
         PageFactory.initElements(driver, this);
     }
 
     /**
-     * Perform login with provided credentials.
+     * Perform login with username and password. Caller should navigate or verify resulting page.
      *
-     * @param username username
-     * @param password password
+     * @param username username to use
+     * @param password password to use
      */
     public void login(String username, String password) {
-        LOGGER.info("Logging in as {}", username);
         type(usernameField, username);
         type(passwordField, password);
         click(loginButton);
+        dismissPasswordChangeAlertIfPresent();
     }
 
-    /**
-     * Check whether login page is loaded by verifying username field is visible.
-     *
-     * @return true if loaded
-     */
     public boolean isLoaded() {
-        try {
-            waitForVisibility(usernameField);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        waitForVisibility(usernameField);
+        waitForVisibility(passwordField);
+        return true;
     }
 
     /**
-     * Check whether an error message is visible after attempting login.
+     * Return the visible error message (if any) after a failed login attempt.
      *
-     * @return true if error is visible
+     * @return error text or empty string when none
      */
-    public boolean isErrorVisible() {
-        try {
-            waitForVisibility(errorMessage, 5);
-            return errorMessage.isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+    public String getErrorMessage() {
+        waitForVisibility(errorContainer);
+        return getText(errorContainer);
     }
 }

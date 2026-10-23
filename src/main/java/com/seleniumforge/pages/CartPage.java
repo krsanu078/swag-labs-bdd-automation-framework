@@ -1,15 +1,12 @@
 package com.seleniumforge.pages;
 
 import com.seleniumforge.base.BasePage;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -17,13 +14,12 @@ import java.util.stream.Collectors;
  */
 public class CartPage extends BasePage {
 
-    private static final Logger LOGGER = LogManager.getLogger(CartPage.class);
-
-    @FindBy(css = ".cart_item")
-    private List<WebElement> cartItems;
-
     @FindBy(id = "checkout")
     private WebElement checkoutButton;
+
+    private static final By CART_LIST = By.cssSelector(".cart_list");
+    private static final By CART_ITEMS = By.cssSelector(".cart_item");
+    private static final By ITEM_NAME = By.cssSelector(".inventory_item_name");
 
     public CartPage() {
         super();
@@ -36,7 +32,10 @@ public class CartPage extends BasePage {
      * @return list of product names
      */
     public List<String> getCartProductNames() {
-        return cartItems.stream().map(item -> item.findElement(By.cssSelector(".inventory_item_name")).getText()).collect(Collectors.toList());
+        waitForVisibility(CART_LIST);
+        return driver.findElements(CART_ITEMS).stream()
+                .map(item -> item.findElement(ITEM_NAME).getText())
+                .collect(Collectors.toList());
     }
 
     /**
@@ -45,26 +44,20 @@ public class CartPage extends BasePage {
      * @param name product name to remove
      */
     public void removeProductByName(String name) {
-        LOGGER.info("Removing product from cart: {}", name);
-        Optional<WebElement> match = cartItems.stream().filter(item -> {
-            try {
-                String title = item.findElement(By.cssSelector(".inventory_item_name")).getText();
-                return title.trim().equalsIgnoreCase(name.trim());
-            } catch (Exception e) {
-                return false;
-            }
-        }).findFirst();
-        match.ifPresent(item -> {
-            WebElement removeBtn = item.findElement(By.cssSelector("button.cart_button"));
-            click(removeBtn);
-        });
+        waitForVisibility(CART_LIST);
+        WebElement item = driver.findElements(CART_ITEMS).stream()
+                .filter(cartItem -> cartItem.findElement(ITEM_NAME).getText().trim().equalsIgnoreCase(name.trim()))
+                .findFirst()
+                .orElseThrow(() -> new org.openqa.selenium.NoSuchElementException(
+                        "Product not found in cart: " + name));
+        click(item.findElement(By.cssSelector("button.cart_button")));
+        waitForInvisibility(item);
     }
 
     /**
      * Proceed to the checkout information page.
      */
     public void proceedToCheckout() {
-        LOGGER.info("Proceeding to checkout");
         click(checkoutButton);
     }
 }

@@ -1,25 +1,18 @@
 package com.seleniumforge.pages;
 
 import com.seleniumforge.base.BasePage;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
  * HomePage representing the products listing on SauceDemo.
  */
 public class HomePage extends BasePage {
-
-    private static final Logger LOGGER = LogManager.getLogger(HomePage.class);
-
-    @FindBy(css = ".inventory_item")
-    private List<WebElement> products;
 
     @FindBy(css = ".shopping_cart_link")
     private WebElement cartLink;
@@ -29,6 +22,9 @@ public class HomePage extends BasePage {
 
     @FindBy(id = "logout_sidebar_link")
     private WebElement logoutLink;
+
+    private static final By PRODUCTS = By.cssSelector(".inventory_item");
+    private static final By PRODUCT_NAME = By.cssSelector(".inventory_item_name");
 
     /**
      * Initialize HomePage elements.
@@ -44,9 +40,7 @@ public class HomePage extends BasePage {
      * @return true if products are present
      */
     public boolean isLoaded() {
-        boolean loaded = products != null && !products.isEmpty();
-        LOGGER.debug("HomePage loaded: {} (product count={})", loaded, products == null ? 0 : products.size());
-        return loaded;
+        return !waitForAllElementsVisible(PRODUCTS).isEmpty();
     }
 
     /**
@@ -55,17 +49,18 @@ public class HomePage extends BasePage {
      * @param name product name to open
      */
     public void openProductByName(String name) {
-        LOGGER.info("Opening product by name: {}", name);
-        Optional<WebElement> match = products.stream()
+        Optional<WebElement> match = waitForAllElementsVisible(PRODUCTS).stream()
                 .filter(p -> {
                     try {
-                        WebElement title = p.findElement(By.cssSelector(".inventory_item_name"));
+                        WebElement title = p.findElement(PRODUCT_NAME);
                         return title.getText().trim().equalsIgnoreCase(name.trim());
                     } catch (Exception e) {
                         return false;
                     }
                 }).findFirst();
-        match.ifPresent(p -> p.findElement(By.cssSelector(".inventory_item_name")).click());
+        WebElement product = match.orElseThrow(() ->
+                new NoSuchElementException("Product not found on products page: " + name));
+        click(product.findElement(PRODUCT_NAME));
     }
 
     /**
@@ -74,25 +69,24 @@ public class HomePage extends BasePage {
      * @param name product name
      */
     public void addProductToCartByName(String name) {
-        LOGGER.info("Adding product to cart: {}", name);
-        products.stream().filter(p -> {
+        Optional<WebElement> match = waitForAllElementsVisible(PRODUCTS).stream().filter(p -> {
             try {
-                WebElement title = p.findElement(By.cssSelector(".inventory_item_name"));
+                WebElement title = p.findElement(PRODUCT_NAME);
                 return title.getText().trim().equalsIgnoreCase(name.trim());
             } catch (Exception e) {
                 return false;
             }
-        }).findFirst().ifPresent(p -> {
-            WebElement addBtn = p.findElement(By.cssSelector("button.btn_inventory"));
-            click(addBtn);
-        });
+        }).findFirst();
+        WebElement product = match.orElseThrow(() ->
+                new NoSuchElementException("Product not found on products page: " + name));
+        WebElement addBtn = product.findElement(By.cssSelector("button.btn_inventory"));
+        click(addBtn);
     }
 
     /**
      * Navigate to the Cart page.
      */
     public void goToCart() {
-        LOGGER.info("Navigating to cart");
         click(cartLink);
     }
 
@@ -100,10 +94,8 @@ public class HomePage extends BasePage {
      * Logout the current user using the burger menu.
      */
     public void logout() {
-        LOGGER.info("Logging out user via menu");
         click(menuButton);
-        // wait for menu to reveal and then click logout
-        waitForVisibility(logoutLink);
+        waitForVisibility(logoutLink, 5);
         click(logoutLink);
     }
 }

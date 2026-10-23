@@ -14,6 +14,7 @@ import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -37,7 +38,7 @@ public abstract class BasePage {
             throw new FrameworkException("WebDriver instance is null. Ensure DriverFactory.initDriver() was called.");
         }
         this.config = ConfigReader.getInstance();
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(config.getTimeout()));
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(config.getExplicitWaitTimeout()));
         this.actions = new Actions(driver);
         PageFactory.initElements(driver, this);
     }
@@ -216,7 +217,7 @@ public abstract class BasePage {
      * @param element element to wait for
      */
     public void waitForVisibility(WebElement element) {
-        waitForVisibility(element, config.getTimeout());
+        waitForVisibility(element, config.getExplicitWaitTimeout());
     }
 
     /**
@@ -227,7 +228,7 @@ public abstract class BasePage {
      */
     public void waitForVisibility(WebElement element, long seconds) {
         try {
-            new WebDriverWait(driver, Duration.ofSeconds(seconds))
+            newWait(seconds)
                     .until(ExpectedConditions.visibilityOf(element));
             LOGGER.debug("Element visible: {}", describe(element));
         } catch (TimeoutException e) {
@@ -242,7 +243,7 @@ public abstract class BasePage {
      * @param element element to wait for
      */
     public void waitForClickable(WebElement element) {
-        waitForClickable(element, config.getTimeout());
+        waitForClickable(element, config.getExplicitWaitTimeout());
     }
 
     /**
@@ -253,11 +254,43 @@ public abstract class BasePage {
      */
     public void waitForClickable(WebElement element, long seconds) {
         try {
-            new WebDriverWait(driver, Duration.ofSeconds(seconds))
+            newWait(seconds)
                     .until(ExpectedConditions.elementToBeClickable(element));
             LOGGER.debug("Element clickable: {}", describe(element));
         } catch (TimeoutException e) {
             LOGGER.error("waitForClickable() timed out on element {}", describe(element));
+            throw e;
+        }
+    }
+
+    public WebElement waitForVisibility(By locator) {
+        return waitForVisibility(locator, config.getExplicitWaitTimeout());
+    }
+
+    public WebElement waitForVisibility(By locator, long seconds) {
+        try {
+            return newWait(seconds).until(ExpectedConditions.visibilityOfElementLocated(locator));
+        } catch (TimeoutException e) {
+            LOGGER.error("waitForVisibility() timed out for locator {}", locator);
+            throw e;
+        }
+    }
+
+    public List<WebElement> waitForAllElementsVisible(By locator) {
+        try {
+            return newWait(config.getExplicitWaitTimeout())
+                    .until(ExpectedConditions.visibilityOfAllElementsLocatedBy(locator));
+        } catch (TimeoutException e) {
+            LOGGER.error("waitForAllElementsVisible() timed out for locator {}", locator);
+            throw e;
+        }
+    }
+
+    public void waitForInvisibility(WebElement element) {
+        try {
+            newWait(config.getExplicitWaitTimeout()).until(ExpectedConditions.invisibilityOf(element));
+        } catch (TimeoutException e) {
+            LOGGER.error("waitForInvisibility() timed out on element {}", describe(element));
             throw e;
         }
     }
@@ -271,12 +304,16 @@ public abstract class BasePage {
         try {
             ExpectedCondition<Boolean> pageLoadCondition = driver -> ((JavascriptExecutor) driver)
                     .executeScript("return document.readyState").equals("complete");
-            new WebDriverWait(driver, Duration.ofSeconds(seconds)).until(pageLoadCondition);
+            newWait(seconds).until(pageLoadCondition);
             LOGGER.debug("Page load complete");
         } catch (TimeoutException e) {
             LOGGER.error("waitForPageLoad() timed out after {} seconds", seconds);
             throw e;
         }
+    }
+
+    private WebDriverWait newWait(long seconds) {
+        return new WebDriverWait(driver, Duration.ofSeconds(seconds), Duration.ofMillis(250));
     }
 
     /**
@@ -412,6 +449,26 @@ public abstract class BasePage {
             return "[stale element]";
         } catch (Exception e) {
             return "[unknown element]";
+        }
+    }
+
+    protected void dismissPasswordChangeAlertIfPresent() {
+        try {
+            Alert alert = driver.switchTo().alert();
+            String alertText = alert.getText();
+            String normalizedText = alertText.toLowerCase(java.util.Locale.ROOT);
+            if (normalizedText.contains("password")
+                    && (normalizedText.contains("change")
+                    || normalizedText.contains("update")
+                    || normalizedText.contains("expired"))) {
+                LOGGER.warn("Dismissing password-change alert: {}", alertText);
+                alert.dismiss();
+                return;
+            }
+            throw new FrameworkException(
+                    "Unexpected browser alert after login: " + alertText);
+        } catch (NoAlertPresentException ignored) {
+            // No JavaScript alert is present.
         }
     }
 }

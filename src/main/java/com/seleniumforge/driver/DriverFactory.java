@@ -44,7 +44,7 @@ public final class DriverFactory {
             WebDriver wd = BrowserFactory.createDriver(browserType, headless);
             wd.manage().window().maximize();
             wd.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(config.getTimeout()));
-            wd.manage().timeouts().implicitlyWait(Duration.ofSeconds(config.getTimeout()));
+            wd.manage().timeouts().implicitlyWait(Duration.ZERO);
             driver.set(wd);
             LOGGER.info("WebDriver created and stored in ThreadLocal");
         }

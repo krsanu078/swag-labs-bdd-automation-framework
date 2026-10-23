@@ -1,7 +1,6 @@
 package com.seleniumforge.factories;
 
 import com.seleniumforge.enums.BrowserType;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -9,6 +8,8 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+
+import java.util.Map;
 
 /**
  * BrowserFactory is responsible for creating WebDriver instances for supported browsers.
@@ -42,23 +43,29 @@ public final class BrowserFactory {
     }
 
     private static WebDriver createChrome(boolean headless) {
-        WebDriverManager.chromedriver().setup();
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--disable-gpu");
+        options.addArguments("--incognito");
+        options.addArguments("--disable-save-password-bubble");
+        options.addArguments("--disable-features=PasswordLeakDetection,PasswordCheck,PasswordManagerOnboarding");
+        options.setExperimentalOption("prefs", Map.of(
+                "credentials_enable_service", false,
+                "profile.password_manager_enabled", false,
+                "profile.password_manager_leak_detection", false,
+                "profile.default_content_setting_values.notifications", 2
+        ));
         options.setHeadless(headless);
         return new ChromeDriver(options);
     }
 
     private static WebDriver createFirefox(boolean headless) {
-        WebDriverManager.firefoxdriver().setup();
         FirefoxOptions options = new FirefoxOptions();
         options.setHeadless(headless);
         return new FirefoxDriver(options);
     }
 
     private static WebDriver createEdge(boolean headless) {
-        WebDriverManager.edgedriver().setup();
         EdgeOptions options = new EdgeOptions();
         options.setHeadless(headless);
         return new EdgeDriver(options);

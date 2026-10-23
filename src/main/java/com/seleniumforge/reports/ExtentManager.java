@@ -55,7 +55,7 @@ public final class ExtentManager {
             extent.setSystemInfo("Base URL", cfg.getProperty("url"));
             extent.setSystemInfo("OS", System.getProperty("os.name"));
             extent.setSystemInfo("Java", System.getProperty("java.version"));
-            extent.setSystemInfo("Framework", "seleniumforge");
+            extent.setSystemInfo("Framework", "Swag Labs BDD Automation Framework");
             LOGGER.info("ExtentReports initialized at {}", reportPath.toAbsolutePath());
         } catch (Exception e) {
             LOGGER.error("Failed to initialize ExtentReports: {}", e.getMessage(), e);

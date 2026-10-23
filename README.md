@@ -1,267 +1,135 @@
-# SeleniumForge
+# Swag Labs BDD Automation Framework
 
-[![Java](https://img.shields.io/badge/Java-17-blue)](https://www.oracle.com/java/)
-[![Maven](https://img.shields.io/badge/Maven-3.x-blueviolet)](https://maven.apache.org/)
-[![Selenium](https://img.shields.io/badge/Selenium-4.x-green)](https://www.selenium.dev/)
+An end-to-end UI test automation framework for the [Swag Labs demo storefront](https://www.saucedemo.com/). It combines behavior-driven development with reusable Selenium page objects and automated test reporting.
 
-Production-ready, enterprise-grade Selenium Automation Framework implemented in Java (seleniumforge). This repository provides a scalable, maintainable, and configurable automation framework suitable for SDETs and QA teams.
+## Project highlights
 
----
+- **BDD specifications:** Cucumber scenarios express user behavior in Gherkin and are organized by application feature.
+- **Layered design:** Step definitions coordinate actions and assertions through page objects; browser setup and cleanup are handled by scenario hooks.
+- **Reliable browser interactions:** Selenium explicit waits are used for page and element state, with implicit waits disabled.
+- **Scenario-level isolation:** Each scenario receives a fresh WebDriver session.
+- **Test execution and reporting:** TestNG runs the Cucumber suite; Cucumber HTML/JSON and ExtentReports capture results. Scenario screenshots are embedded in reports when a browser session is available.
+- **Maintainable configuration:** Browser, base URL, timeouts, and screenshot settings are kept in one properties file.
 
-## Project Overview
+## Technology stack
 
-SeleniumForge is a modular Selenium-based automation framework built with Java 17, Maven, Selenium 4, TestNG and industry-grade utilities. It follows SOLID principles, Clean Code conventions and is intended to be used in real-world CI pipelines.
+| Technology                         | Purpose                                |
+| ---                                | ---                                    |
+| Java 17                            | Framework and test implementation      |
+| Selenium WebDriver 4               | Browser automation                     |
+| Cucumber 7                         | Gherkin features and BDD glue          |
+| TestNG                             | Test execution and listener lifecycle  |
+| Maven                              | Dependency and build management        |
+| ExtentReports and Cucumber plugins | HTML/JSON results and screenshots      |
+| Log4j2                             | Execution logging                      |
 
-Goals:
-- Provide a stable ThreadLocal WebDriver implementation for parallel execution.
-- Centralize configuration through a singleton ConfigReader.
-- Provide reusable utilities (explicit waits, screenshots, Excel/JSON readers).
-- Integrate reporting (Extent Reports) and logging (Log4j2).
-- Offer Page Object Model (POM) pages for a sample AUT (SauceDemo) with clear business-method APIs.
-- Support cross-browser and headless execution via WebDriverManager.
+## Scenarios covered
 
----
+The current feature suite covers:
 
-## Architecture (Mermaid)
+- Login with valid credentials and rejection of invalid/locked-out credentials
+- Adding products to the cart and removing products
+- Viewing product details
+- Completing checkout and verifying the confirmation
+- Logging out
 
-```mermaid
-flowchart TD
-  A[Tests (test/*)] -->|use| B[BaseTest]
-  B -->|initializes| C[DriverFactory / ThreadLocal]
-  C -->|creates| D[BrowserFactory]
-  B -->|uses| E[Pages]
-  E -->|use| F[BasePage]
-  B -->|logs| G[Log4j2]
-  B -->|reports| H[ExtentReports]
-  I[Utilities] -->|provide| E
-  I -->|provide| B
-  subgraph Core
-    B
-    C
-    D
-    F
-    E
-  end
-  subgraph Support
-    I[Utilities]
-    G[Log4j2]
-    H[ExtentReports]
-    J[Listeners]
-    K[ConfigReader]
-  end
+Feature files are in [`src/test/resources/features`](src/test/resources/features). The `@smoke` tag selects the valid-login smoke scenario; the other current scenarios use `@regression`.
+
+## Project structure
+
+```text
+src/
+  main/
+    java/com/seleniumforge/
+      base/             Shared page and test lifecycle behavior
+      config/           Configuration loading
+      driver/           WebDriver lifecycle and thread-local storage
+      factories/        Browser setup
+      listeners/        TestNG reporting integration
+      pages/            Page Object Model
+      reports/          ExtentReports setup and report archiving
+      utilities/        Shared utilities
+    resources/
+      config.properties Framework and reporting configuration
+      log4j2.xml         Logging configuration
+  test/
+    java/com/seleniumforge/bdd/
+      hooks/            Per-scenario browser lifecycle and screenshots
+      runners/          Cucumber TestNG runner
+      steps/            Gherkin step definitions
+    resources/
+      features/         Gherkin scenarios
+      users.json        Demo application test users
+pom.xml
+testng.xml
 ```
 
----
+## Prerequisites
 
-## Folder Structure
+- JDK 17
+- Maven 3.6 or newer
+- A supported browser installed locally (Chrome is configured by default)
+- Network access to the Swag Labs demo application
 
-seleniumforge
-├── src
-│   ├── main
-│   │   ├── java
-│   │   │   └── com.seleniumforge
-│   │   │       ├── base
-│   │   │       ├── config
-│   │   │       ├── constants
-│   │   │       ├── driver
-│   │   │       ├── pages
-│   │   │       ├── reports
-│   │   │       ├── listeners
-│   │   │       ├── utilities
-│   │   │       ├── exceptions
-│   │   │       ├── enums
-│   │   │       └── factories
-│   └── resources
-│       ├── config.properties
-│       ├── log4j2.xml
-│       └── testdata.xlsx
-├── test
-│   ├── java
-│   │   └── (test classes organized by packages and groups)
-│   ├── smoke
-│   ├── regression
-│   └── sanity
-├── screenshots
-├── reports
-├── logs
-├── pom.xml
-├── testng.xml
-├── README.md
-└── .github/workflows/ci.yml
+Selenium Manager resolves the matching browser driver when the tests start, so a separately downloaded ChromeDriver is not normally required.
 
-Note: The repository uses a ThreadLocal WebDriver strategy and Page Object Model. Tests should inherit from BaseTest.
+## Run the tests
 
----
+From the project root, run the complete suite:
 
-## Framework Features
-
-- ThreadLocal WebDriver (parallel-safe)
-- BrowserFactory with WebDriverManager (Chrome, Firefox, Edge, headless support)
-- Singleton ConfigReader for centralized configuration
-- BaseTest with setup/teardown and automatic navigation to base URL
-- BasePage (planned) with reusable wrappers (click, type, jsClick, waits, frame/window handling)
-- PageObjects for AUT (SauceDemo) — business methods only
-- Utilities: WaitUtil, ScreenshotUtil, ExcelUtil, JsonUtil
-- Reporting: Extent Reports with environment/system info and screenshots
-- Logging: Log4j2 configuration (console + file)
-- Retry Analyzer and TestNG listeners for robust execution
-- CI integration via GitHub Actions (CI workflow will run maven test and archive reports)
-
----
-
-## Tech Stack
-
-- Java 17
-- Maven
-- Selenium 4
-- TestNG
-- WebDriverManager
-- Extent Reports
-- Log4j2
-- Apache POI (Excel)
-- Jackson (JSON)
-
----
-
-## Design Patterns Used
-
-- Singleton (ConfigReader, ExtentManager)
-- Factory (BrowserFactory, DriverFactory)
-- Page Object Model (Pages inherit BasePage)
-- ThreadLocal (DriverFactory) for parallel-safe WebDriver instances
-- Utility classes (stateless helpers)
-
----
-
-## How to Run
-
-Prerequisites:
-- Java 17 installed and JAVA_HOME configured
-- Maven 3.6+
-
-Build and compile (without tests):
-
-```
-mvn -U -DskipTests package
+```powershell
+mvn clean test
 ```
 
-Run full test suite:
+Run only the login smoke scenario:
 
-```
-mvn test
-```
-
-Run a specific TestNG group (e.g., smoke):
-
-```
-mvn test -Dgroups=smoke
+```powershell
+mvn test "-Dcucumber.filter.tags=@smoke"
 ```
 
-Or run a specific suite XML (once created):
+Run the regression scenarios:
 
-```
-mvn -Dtestng.suiteXmlFiles=smoke.xml test
-```
-
-Notes:
-- Configure `src/main/resources/config.properties` to set `browser`, `url`, `environment`, `timeouts`, `headless`, `parallel`.
-- For parallel runs, set `parallel=true` in config and configure TestNG suite to use `parallel="methods"` or `classes` as needed.
-
----
-
-## How to Execute Smoke Suite
-
-Two options:
-1) Using TestNG groups (recommended):
-```
-mvn test -Dgroups=smoke
-```
-2) Using a dedicated suite XML (if present):
-```
-mvn -Dtestng.suiteXmlFiles=test/suites/smoke.xml test
+```powershell
+mvn test "-Dcucumber.filter.tags=@regression"
 ```
 
----
+The default browser is visible (not headless). To run headless, set `headless=true` in `src/main/resources/config.properties`. Browser startup, browser availability, and access to the external demo site are required for the UI tests.
 
-## How to Execute Regression Suite
+## Configuration
 
-```
-mvn test -Dgroups=regression
-```
-or with suite XML:
+Update `src/main/resources/config.properties` to change the local test settings:
 
-```
-mvn -Dtestng.suiteXmlFiles=test/suites/regression.xml test
-```
+| Property                  | Default                     | Description                    |
+| ---                       | ---                         | ---                            |
+| `browser`                 | `chrome`                    | Browser to launch              |
+| `url`                     | `https://www.saucedemo.com` | Application base URL           |
+| `timeouts`                | `30`                        | Page-load timeout in seconds   |
+| `explicitWaitTimeout`     | `10`              | Explicit element-wait timeout in seconds |
+| `headless`                | `false`           | Run the browser without a visible window |
+| `report.captureOnSuccess` | `true`            | Attach screenshots for passing scenarios |
+| `report.captureOnSkip`    | `true`            | Attach screenshots for skipped scenarios |
+| `report.archiveOnFinish`  | `true`            | Archive the Extent report after the run  |
 
----
+Failed scenarios are always captured when a browser session is available. The demo credentials used by the scenarios are public Swag Labs test accounts, not credentials for a private service.
 
-## Parallel Execution
+## Reports and logs
 
-- ThreadLocal WebDriver enables parallel tests without WebDriver collisions.
-- Configure TestNG suite with `parallel="methods|classes|tests"` and `thread-count`.
-- Set `parallel=true` in `config.properties` (the framework reads this flag for optional behavior).
+After a test run, see:
 
-Example TestNG snippet:
+- `target/cucumber-reports/cucumber.html` — Cucumber HTML report
+- `target/cucumber-reports/cucumber.json` — Cucumber JSON results
+- `reports/ExtentReport_<timestamp>.html` — Extent report with scenario screenshots
+- `reports/archive/` — archived Extent reports when report archiving is enabled
+- `logs/` — execution logs, if generated by the logging configuration
 
-```xml
-<suite name="ParallelSuite" parallel="methods" thread-count="4">
-  <test name="Regression">
-    <classes>
-      <class name="tests.YourTestClass"/>
-    </classes>
-  </test>
-</suite>
-```
+Build output and generated reports are local artifacts and are excluded from version control.
 
----
+## How the test flow is organized
 
-## Extent Report (placeholder)
+1. A Cucumber feature describes the user behavior.
+2. Cucumber resolves each Gherkin step to a step definition.
+3. Step definitions use page objects for browser actions and assertions.
+4. Scenario hooks start the browser before each scenario, attach configured screenshots afterward, and close the browser.
+5. The TestNG listener and Cucumber plugins produce the run reports.
 
-Reports are generated in the `reports/` directory as `ExtentReport_<timestamp>.html` once tests run. Screenshots are saved in `screenshots/` and embedded in the Extent report for failures and skips.
-
-![ExtentReportPlaceholder](docs/extent-placeholder.png)
-
----
-
-## GitHub Actions
-
-CI pipeline (to be implemented) will:
-- Run on push and pull request
-- Setup JDK 17
-- Cache Maven dependencies
-- Run `mvn clean test`
-- Upload/Archive Extent Reports as build artifacts
-
-A workflow is planned at `.github/workflows/ci.yml`.
-
----
-
-## Future Roadmap
-
-- Complete BasePage and POMs for SauceDemo and additional demo sites
-- Add data-driven examples (data providers, Excel, JSON)
-- Add Cross-browser matrix in GitHub Actions (matrix strategy)
-- Add Dockerized test execution
-- Add integration with test case management / Jira
-- Add Docker/BrowserStack/SauceLabs integration for cloud runs
-
----
-
-## License
-
-This repository is released under the MIT License. See `LICENSE` for details.
-
----
-
-## Contribution Guide
-
-- Fork the repo and create a feature branch (feature/<short-description>)
-- Follow Java 17, Clean Code and SOLID principles
-- Add unit/automation tests and update test suites
-- Update `CHANGELOG.md` for notable changes
-- Open a PR with a clear description and link to related issues
-
----
-
-If you want, I will now implement Phase 2 (BasePage) following the existing code style and packages, ensuring all Page Objects inherit from it. Reply `proceed` to continue.
+This repository targets a public demo storefront for learning and demonstration. It is an automation-framework sample, not a production commerce application.
