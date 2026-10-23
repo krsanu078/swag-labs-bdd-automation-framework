@@ -95,6 +95,16 @@ mvn test "-Dcucumber.filter.tags=@regression"
 
 The default browser is visible (not headless). To run headless, set `headless=true` in `src/main/resources/config.properties`. Browser startup, browser availability, and access to the external demo site are required for the UI tests.
 
+## Continuous integration
+
+GitHub Actions runs the complete BDD suite on pushes and pull requests targeting `main`, and can also be started manually from the Actions tab. CI uses Java 17, runs Chrome headlessly, and uploads Cucumber, Extent, and log output as downloadable workflow artifacts (when generated).
+
+To override a configuration value for a single local Maven invocation, pass it as a system property:
+
+```powershell
+mvn test "-Dheadless=true"
+```
+
 ## Configuration
 
 Update `src/main/resources/config.properties` to change the local test settings:

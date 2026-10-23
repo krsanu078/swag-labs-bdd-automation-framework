@@ -45,11 +45,11 @@ public final class ConfigReader {
      * @return property value or null if not found
      */
     public String getProperty(String key) {
-        return properties.getProperty(key);
+        return System.getProperty(key, properties.getProperty(key));
     }
 
     public String getProperty(String key, String defaultValue) {
-        return properties.getProperty(key, defaultValue);
+        return System.getProperty(key, properties.getProperty(key, defaultValue));
     }
 
     /**
@@ -58,7 +58,7 @@ public final class ConfigReader {
      * @return browser name
      */
     public String getBrowser() {
-        return Objects.toString(properties.getProperty("browser"), "chrome").trim();
+        return getProperty("browser", "chrome").trim();
     }
 
     /**
@@ -67,7 +67,7 @@ public final class ConfigReader {
      * @return base url
      */
     public String getBaseUrl() {
-        return Objects.toString(properties.getProperty("url"), "");
+        return Objects.toString(getProperty("url"), "");
     }
 
     /**
@@ -76,7 +76,7 @@ public final class ConfigReader {
      * @return timeout seconds
      */
     public int getTimeout() {
-        String t = properties.getProperty("timeouts", "30");
+        String t = getProperty("timeouts", "30");
         try {
             return Integer.parseInt(t);
         } catch (NumberFormatException e) {
@@ -85,7 +85,7 @@ public final class ConfigReader {
     }
 
     public int getExplicitWaitTimeout() {
-        String timeout = properties.getProperty("explicitWaitTimeout", "10");
+        String timeout = getProperty("explicitWaitTimeout", "10");
         try {
             return Integer.parseInt(timeout);
         } catch (NumberFormatException e) {
@@ -99,7 +99,7 @@ public final class ConfigReader {
      * @return true if headless
      */
     public boolean isHeadless() {
-        return Boolean.parseBoolean(properties.getProperty("headless", "false"));
+        return Boolean.parseBoolean(getProperty("headless", "false"));
     }
 
     /**
@@ -108,6 +108,6 @@ public final class ConfigReader {
      * @return true if parallel
      */
     public boolean isParallel() {
-        return Boolean.parseBoolean(properties.getProperty("parallel", "false"));
+        return Boolean.parseBoolean(getProperty("parallel", "false"));
     }
 }

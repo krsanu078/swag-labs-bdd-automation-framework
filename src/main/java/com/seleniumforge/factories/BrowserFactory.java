@@ -46,6 +46,7 @@ public final class BrowserFactory {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-allow-origins=*");
         options.addArguments("--disable-gpu");
+        options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--incognito");
         options.addArguments("--disable-save-password-bubble");
         options.addArguments("--disable-features=PasswordLeakDetection,PasswordCheck,PasswordManagerOnboarding");
